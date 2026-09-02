@@ -13,6 +13,13 @@ engine = create_async_engine(
     max_overflow=5,
     pool_pre_ping=True,
     echo=False,
+    # CockroachDB doesn't expose pg_catalog.json the way Postgres does, which
+    # breaks asyncpg's default per-connection codec/prepared-statement setup.
+    # Disabling the prepared statement cache skips that introspection step.
+    connect_args={
+        "prepared_statement_cache_size": 0,
+        "statement_cache_size": 0,
+    },
 )
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
