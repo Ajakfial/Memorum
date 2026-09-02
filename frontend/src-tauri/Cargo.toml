@@ -1,0 +1,29 @@
+[package]
+name = "memorum"
+version = "0.1.0"
+description = "Memorum — a fast, low-memory chat client"
+authors = ["Memorum"]
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+# `custom-protocol` lets Tauri serve the bundled frontend from disk in release
+# builds; without it the app would need a live dev server to render anything.
+tauri = { version = "1.7", features = ["shell-open"] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
+# Release builds favor small binaries and startup speed over compile time —
+# both matter for a chat client that should feel instant to open.
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

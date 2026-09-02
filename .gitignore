@@ -1,0 +1,30 @@
+# --- environment / secrets ---
+.env
+.env.local
+*.pem
+
+# --- Python / backend ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# --- Rust / Tauri ---
+frontend/src-tauri/target/
+frontend/src-tauri/Cargo.lock
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- editors ---
+.vscode/
+.idea/
