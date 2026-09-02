@@ -14,9 +14,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # Postgres-wire connection string. CockroachDB is wire-compatible with
-    # Postgres, so a standard asyncpg driver works. Example shape:
-    # postgresql+asyncpg://user:pass@host:26257/defaultdb?ssl=verify-full
+    # Postgres-wire connection string, exactly as CockroachDB's console gives
+    # it to you: postgresql://user:pass@host:26257/defaultdb?sslmode=verify-full
+    # normalized_database_url (below) rewrites this to cockroachdb+asyncpg://
+    # for actual use — don't put the rewritten form here.
     database_url: str
 
     jwt_secret: str
@@ -36,7 +37,13 @@ class Settings(BaseSettings):
     def normalized_database_url(self) -> str:
         """
         Accept a plain `postgresql://` string (what CockroachDB's console
-        gives you) and coerce it to the asyncpg driver URL SQLAlchemy needs.
+        gives you) and route it through the `sqlalchemy-cockroachdb` dialect
+        (`cockroachdb+asyncpg://`) instead of the vanilla Postgres one.
+        CockroachDB is Postgres wire-compatible but differs enough at the
+        catalog level — its version string doesn't match Postgres's `X.Y`
+        format, and its `pg_catalog` has no standalone `json` type — that
+        the plain `postgresql+asyncpg` dialect breaks on both. The
+        CockroachDB-specific dialect patches both around it.
 
         `sslmode=verify-full` is deliberately downgraded to `ssl=require`:
         verify-full makes asyncpg look for a locally pinned root CA cert at
@@ -48,7 +55,7 @@ class Settings(BaseSettings):
         """
         url = self.database_url
         if url.startswith("postgresql://"):
-            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+            url = "cockroachdb+asyncpg://" + url[len("postgresql://"):]
         url = url.replace("sslmode=verify-full", "ssl=require")
         url = url.replace("sslmode=require", "ssl=require")
         url = url.replace("sslmode=verify-ca", "ssl=require")
