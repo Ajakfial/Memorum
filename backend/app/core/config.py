@@ -24,7 +24,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
 
-    cors_origins: str = "http://localhost:1420,tauri://localhost"
+    # Tauri's dev server (localhost:1420) plus its packaged-app origins —
+    # macOS/Linux serve the webview over tauri://localhost, but Windows'
+    # WebView2 uses https://tauri.localhost instead. Both are needed or
+    # every request from a Windows build gets silently CORS-blocked.
+    cors_origins: str = "http://localhost:1420,tauri://localhost,https://tauri.localhost"
 
     app_name: str = "Memorum"
     environment: str = "development"
